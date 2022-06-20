@@ -3,3 +3,7 @@
 *.SchDocPreview
 *.htm
 *.LOG
+*.d
+*.o
+*.crf
+*.s
