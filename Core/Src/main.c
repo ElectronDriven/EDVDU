@@ -22,7 +22,11 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "FONT/font/f5x7.h"
+#include "FONT/font/AF9x10.h"
+#include "FONT/font/AF12x16.h"
+#include "FONT/font/f10x20.h"
+#include "BMP/Logo.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -32,45 +36,58 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define KEY_PRESSED     0x00
+#define KEY_NOT_PRESSED 0x01
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
+void Input_DB_GLCD(void);
+void Output_DB_GLCD(void);
+void Write_DB_GLCD(unsigned char x);
+unsigned char Read_DB_GLCD(void);
+unsigned int _delay_us(unsigned int Delay);
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-ADC_HandleTypeDef hadc1;
-
-CAN_HandleTypeDef hcan;
-
-I2C_HandleTypeDef hi2c2;
-
 RTC_HandleTypeDef hrtc;
 
-SPI_HandleTypeDef hspi2;
+SPI_HandleTypeDef hspi1;
 
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
 osThreadId defaultTaskHandle;
 /* USER CODE BEGIN PV */
+unsigned char Data;
+char data[37];
+char Ctemp[20];
+
+uint8_t ubKeyNumber = 0x0;
+//CAN_TxHeaderTypeDef   TxHeader;
+//CAN_RxHeaderTypeDef   RxHeader;
+uint8_t               TxData[8];
+uint8_t               RxData[8];
+uint32_t              TxMailbox;
 
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_ADC1_Init(void);
-static void MX_CAN_Init(void);
-static void MX_I2C2_Init(void);
-static void MX_SPI2_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_RTC_Init(void);
 static void MX_USART1_UART_Init(void);
+static void MX_SPI1_Init(void);
 void StartDefaultTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
+void GLCD(void const * argument);
+void BLINK(void const * argument);
+void CANBUS(void const * argument);
+
+//static void LED_Display(uint8_t LedStatus);
 
 /* USER CODE END PFP */
 
@@ -107,13 +124,10 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_ADC1_Init();
-  MX_CAN_Init();
-  MX_I2C2_Init();
-  MX_SPI2_Init();
   MX_USART2_UART_Init();
   MX_RTC_Init();
   MX_USART1_UART_Init();
+  MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -141,6 +155,14 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
+  osThreadDef(BLINK_T, BLINK, osPriorityNormal, 0, 128);
+  defaultTaskHandle = osThreadCreate(osThread(BLINK_T), NULL);
+	
+  osThreadDef(GLCD_T, GLCD, osPriorityNormal, 0, 128);
+  defaultTaskHandle = osThreadCreate(osThread(GLCD_T), NULL);	
+
+  osThreadDef(CANBUS_T, CANBUS, osPriorityNormal, 0, 128);
+  defaultTaskHandle = osThreadCreate(osThread(CANBUS_T), NULL);	
   /* USER CODE END RTOS_THREADS */
 
   /* Start scheduler */
@@ -196,129 +218,12 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_RTC|RCC_PERIPHCLK_ADC;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_RTC;
   PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSE;
-  PeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV6;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();
   }
-}
-
-/**
-  * @brief ADC1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_ADC1_Init(void)
-{
-
-  /* USER CODE BEGIN ADC1_Init 0 */
-
-  /* USER CODE END ADC1_Init 0 */
-
-  ADC_ChannelConfTypeDef sConfig = {0};
-
-  /* USER CODE BEGIN ADC1_Init 1 */
-
-  /* USER CODE END ADC1_Init 1 */
-  /** Common config
-  */
-  hadc1.Instance = ADC1;
-  hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
-  hadc1.Init.ContinuousConvMode = DISABLE;
-  hadc1.Init.DiscontinuousConvMode = DISABLE;
-  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
-  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.NbrOfConversion = 1;
-  if (HAL_ADC_Init(&hadc1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /** Configure Regular Channel
-  */
-  sConfig.Channel = ADC_CHANNEL_4;
-  sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
-  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN ADC1_Init 2 */
-
-  /* USER CODE END ADC1_Init 2 */
-
-}
-
-/**
-  * @brief CAN Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_CAN_Init(void)
-{
-
-  /* USER CODE BEGIN CAN_Init 0 */
-
-  /* USER CODE END CAN_Init 0 */
-
-  /* USER CODE BEGIN CAN_Init 1 */
-
-  /* USER CODE END CAN_Init 1 */
-  hcan.Instance = CAN1;
-  hcan.Init.Prescaler = 16;
-  hcan.Init.Mode = CAN_MODE_NORMAL;
-  hcan.Init.SyncJumpWidth = CAN_SJW_1TQ;
-  hcan.Init.TimeSeg1 = CAN_BS1_1TQ;
-  hcan.Init.TimeSeg2 = CAN_BS2_1TQ;
-  hcan.Init.TimeTriggeredMode = DISABLE;
-  hcan.Init.AutoBusOff = DISABLE;
-  hcan.Init.AutoWakeUp = DISABLE;
-  hcan.Init.AutoRetransmission = DISABLE;
-  hcan.Init.ReceiveFifoLocked = DISABLE;
-  hcan.Init.TransmitFifoPriority = DISABLE;
-  if (HAL_CAN_Init(&hcan) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN CAN_Init 2 */
-
-  /* USER CODE END CAN_Init 2 */
-
-}
-
-/**
-  * @brief I2C2 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_I2C2_Init(void)
-{
-
-  /* USER CODE BEGIN I2C2_Init 0 */
-
-  /* USER CODE END I2C2_Init 0 */
-
-  /* USER CODE BEGIN I2C2_Init 1 */
-
-  /* USER CODE END I2C2_Init 1 */
-  hi2c2.Instance = I2C2;
-  hi2c2.Init.ClockSpeed = 100000;
-  hi2c2.Init.DutyCycle = I2C_DUTYCYCLE_2;
-  hi2c2.Init.OwnAddress1 = 0;
-  hi2c2.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
-  hi2c2.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
-  hi2c2.Init.OwnAddress2 = 0;
-  hi2c2.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-  hi2c2.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
-  if (HAL_I2C_Init(&hi2c2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN I2C2_Init 2 */
-
-  /* USER CODE END I2C2_Init 2 */
-
 }
 
 /**
@@ -379,40 +284,40 @@ static void MX_RTC_Init(void)
 }
 
 /**
-  * @brief SPI2 Initialization Function
+  * @brief SPI1 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_SPI2_Init(void)
+static void MX_SPI1_Init(void)
 {
 
-  /* USER CODE BEGIN SPI2_Init 0 */
+  /* USER CODE BEGIN SPI1_Init 0 */
 
-  /* USER CODE END SPI2_Init 0 */
+  /* USER CODE END SPI1_Init 0 */
 
-  /* USER CODE BEGIN SPI2_Init 1 */
+  /* USER CODE BEGIN SPI1_Init 1 */
 
-  /* USER CODE END SPI2_Init 1 */
-  /* SPI2 parameter configuration*/
-  hspi2.Instance = SPI2;
-  hspi2.Init.Mode = SPI_MODE_MASTER;
-  hspi2.Init.Direction = SPI_DIRECTION_2LINES;
-  hspi2.Init.DataSize = SPI_DATASIZE_8BIT;
-  hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
-  hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
-  hspi2.Init.NSS = SPI_NSS_HARD_OUTPUT;
-  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
-  hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
-  hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
-  hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-  hspi2.Init.CRCPolynomial = 10;
-  if (HAL_SPI_Init(&hspi2) != HAL_OK)
+  /* USER CODE END SPI1_Init 1 */
+  /* SPI1 parameter configuration*/
+  hspi1.Instance = SPI1;
+  hspi1.Init.Mode = SPI_MODE_MASTER;
+  hspi1.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi1.Init.NSS = SPI_NSS_HARD_OUTPUT;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_64;
+  hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi1.Init.CRCPolynomial = 10;
+  if (HAL_SPI_Init(&hspi1) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN SPI2_Init 2 */
+  /* USER CODE BEGIN SPI1_Init 2 */
 
-  /* USER CODE END SPI2_Init 2 */
+  /* USER CODE END SPI1_Init 2 */
 
 }
 
@@ -501,12 +406,10 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(ALARM_GPIO_Port, ALARM_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, SD_SELECT_Pin|FLASH_SELECT_Pin|DOUT_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, GLCD_D0_Pin|GLCD_D1_Pin|GLCD_D2_Pin|GLCD_D3_Pin
-                          |GLCD_D4_Pin|GLCD_D5_Pin|GLCD_D6_Pin|GLCD_D7_Pin
-                          |GLCD_CS1_Pin|GLCD_CS2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, GLCD_D0_Pin|GLCD_D1_Pin|GLCD_D2_Pin|FLASH_SELECT_Pin
+                          |SDCARD_SELECT_Pin|GLCD_RS_Pin|GLCD_E_Pin|GLCD_RST_Pin
+                          |GLCD_RW_Pin|GLCD_D3_Pin|GLCD_D4_Pin|GLCD_D5_Pin
+                          |GLCD_D6_Pin|GLCD_D7_Pin|GLCD_CS1_Pin|GLCD_CS2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : ALARM_Pin */
   GPIO_InitStruct.Pin = ALARM_Pin;
@@ -515,19 +418,14 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(ALARM_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : SD_SELECT_Pin FLASH_SELECT_Pin DOUT_Pin */
-  GPIO_InitStruct.Pin = SD_SELECT_Pin|FLASH_SELECT_Pin|DOUT_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : GLCD_D0_Pin GLCD_D1_Pin GLCD_D2_Pin GLCD_D3_Pin
-                           GLCD_D4_Pin GLCD_D5_Pin GLCD_D6_Pin GLCD_D7_Pin
-                           GLCD_CS1_Pin GLCD_CS2_Pin */
-  GPIO_InitStruct.Pin = GLCD_D0_Pin|GLCD_D1_Pin|GLCD_D2_Pin|GLCD_D3_Pin
-                          |GLCD_D4_Pin|GLCD_D5_Pin|GLCD_D6_Pin|GLCD_D7_Pin
-                          |GLCD_CS1_Pin|GLCD_CS2_Pin;
+  /*Configure GPIO pins : GLCD_D0_Pin GLCD_D1_Pin GLCD_D2_Pin FLASH_SELECT_Pin
+                           SDCARD_SELECT_Pin GLCD_RS_Pin GLCD_E_Pin GLCD_RST_Pin
+                           GLCD_RW_Pin GLCD_D3_Pin GLCD_D4_Pin GLCD_D5_Pin
+                           GLCD_D6_Pin GLCD_D7_Pin GLCD_CS1_Pin GLCD_CS2_Pin */
+  GPIO_InitStruct.Pin = GLCD_D0_Pin|GLCD_D1_Pin|GLCD_D2_Pin|FLASH_SELECT_Pin
+                          |SDCARD_SELECT_Pin|GLCD_RS_Pin|GLCD_E_Pin|GLCD_RST_Pin
+                          |GLCD_RW_Pin|GLCD_D3_Pin|GLCD_D4_Pin|GLCD_D5_Pin
+                          |GLCD_D6_Pin|GLCD_D7_Pin|GLCD_CS1_Pin|GLCD_CS2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -539,6 +437,18 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(LOAD_GPIO_Port, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : PA11 */
+  GPIO_InitStruct.Pin = GPIO_PIN_11;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PA12 */
+  GPIO_InitStruct.Pin = GPIO_PIN_12;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
   /*Configure GPIO pin : KEYS_Pin */
   GPIO_InitStruct.Pin = KEYS_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
@@ -548,7 +458,124 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void Input_DB_GLCD(void)
+{
+	GPIO_InitTypeDef GPIO_InitStruct;
+	GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3 |GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7;
+	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
+}
+void Output_DB_GLCD(void)
+{
+	GPIO_InitTypeDef GPIO_InitStruct;
+	GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3 |GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+}
+void Write_DB_GLCD(unsigned char x)
+{
+	HAL_GPIO_WritePin(KS108_DB_PRT,0xFF,GPIO_PIN_RESET); 
+	HAL_GPIO_WritePin(KS108_DB_PRT,(x),GPIO_PIN_SET);
+}
+
+unsigned char Read_DB_GLCD(void)
+{ 
+	Data=0;
+	if(HAL_GPIO_ReadPin(KS108_DB_PRT,GPIO_PIN_0))
+		Data|=1;
+	if(HAL_GPIO_ReadPin(KS108_DB_PRT,GPIO_PIN_1))
+		Data|=2;
+	if(HAL_GPIO_ReadPin(KS108_DB_PRT,GPIO_PIN_2))
+		Data|=4;
+	if(HAL_GPIO_ReadPin(KS108_DB_PRT,GPIO_PIN_3))
+		Data|=8;
+	if(HAL_GPIO_ReadPin(KS108_DB_PRT,GPIO_PIN_4))
+		Data|=16;
+	if(HAL_GPIO_ReadPin(KS108_DB_PRT,GPIO_PIN_5))
+		Data|=32;
+	if(HAL_GPIO_ReadPin(KS108_DB_PRT,GPIO_PIN_6))
+		Data|=64;
+	if(HAL_GPIO_ReadPin(KS108_DB_PRT,GPIO_PIN_7))
+		Data|=128;
+	return Data;
+}
+unsigned int _delay_us(unsigned int Delay)
+{
+		//Delay*=100;
+		unsigned int Sum=0;
+		for(unsigned int Counter=0;Counter<=Delay;Counter++)
+		{
+				Sum+=Counter;
+		}
+		return Sum;
+}
+
+/**
+  * @brief  Rx Fifo 0 message pending callback in non blocking mode
+  * @param  CanHandle: pointer to a CAN_HandleTypeDef structure that contains
+  *         the configuration information for the specified CAN.
+  * @retval None
+  */
+
+//void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *CanHandle)
+//{
+//  /* Get RX message */
+//  if (HAL_CAN_GetRxMessage(CanHandle, CAN_RX_FIFO0, &RxHeader, RxData) != HAL_OK)
+//  {
+//    /* Reception Error */
+//    Error_Handler();
+//  }
+
+//  /* Display LEDx */
+//  if ((RxHeader.StdId == 0x321) && (RxHeader.IDE == CAN_ID_STD) && (RxHeader.DLC == 2))
+//  {
+////    LED_Display(RxData[0]);
+//    ubKeyNumber = RxData[0];
+//  }
+//}
+
+
+/**
+  * @brief  Turns ON/OFF the dedicated LED.
+  * @param  LedStatus: LED number from 0 to 3
+  * @retval None
+  */
+//static void LED_Display(uint8_t LedStatus)
+//{
+  /* Turn OFF all LEDs */
+//  BSP_LED_Off(LED1);
+//  BSP_LED_Off(LED2);
+//  BSP_LED_Off(LED3);
+//  BSP_LED_Off(LED4);
+
+//  switch(LedStatus)
+//  {
+//    case (1):
+//      /* Turn ON LED1 */
+////      BSP_LED_On(LED1);
+//      break;
+
+//    case (2):
+//      /* Turn ON LED2 */
+////      BSP_LED_On(LED2);
+//      break;
+
+//    case (3):
+//      /* Turn ON LED3 */
+////      BSP_LED_On(LED3);
+//      break;
+
+//    case (4):
+//      /* Turn ON LED4 */
+////      BSP_LED_On(LED4);
+//      break;
+//    default:
+//      break;
+//  }
+//}
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartDefaultTask */
@@ -557,8 +584,45 @@ static void MX_GPIO_Init(void)
   * @param  argument: Not used
   * @retval None
   */
-/* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void const * argument)
+
+void CANBUS(void const * argument)
+{
+  /* USER CODE BEGIN 5 */
+  /* Infinite loop */
+  for(;;)
+  {
+//			while (BSP_PB_GetState(BUTTON_KEY) == KEY_PRESSED)
+//			{
+				if (ubKeyNumber == 0x4)
+				{
+					ubKeyNumber = 0x00;
+				}
+				else
+				{
+//					LED_Display(++ubKeyNumber);
+					
+					/* Set the data to be transmitted */
+					TxData[0] = ubKeyNumber;
+					TxData[1] = 0xAD;
+					
+					/* Start the Transmission process */
+//					if (HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox) != HAL_OK)
+//					{
+//						/* Transmission request Error */
+//						Error_Handler();
+//					}
+					HAL_Delay(10);
+					
+//					while (BSP_PB_GetState(BUTTON_KEY) != KEY_NOT_PRESSED)
+//					{
+//					}
+//			}
+		}
+  }
+  /* USER CODE END 5 */
+}
+
+void BLINK(void const * argument)
 {
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
@@ -566,6 +630,68 @@ void StartDefaultTask(void const * argument)
   {
 		HAL_GPIO_TogglePin(ALARM_GPIO_Port, ALARM_Pin);
     osDelay(50);
+  }
+  /* USER CODE END 5 */
+}
+
+void GLCD(void const * argument)
+{
+  /* USER CODE BEGIN 5 */
+	
+	KS108_Init(NON_INVERTED);
+	KS108_CLSx();
+	
+  /* Infinite loop */
+  for(;;)
+  {
+		KS108_DrawBitmap(Logo, 0, 0, TRANS);
+		_delay_ms(1500);
+		KS108_CLSx();
+		
+		SetLetter(E_LETTER);
+		LcdFont(AF12x16);
+		TextBox (0, 20,  127,  40, "ELECTRON DRIVEN",  ALINE_CENTER | BORDER_RECT |BORDER_FILL);
+		_delay_ms(1500);
+		KS108_CLSx();
+
+  }
+  /* USER CODE END 5 */
+}
+
+/* USER CODE END Header_StartDefaultTask */
+void StartDefaultTask(void const * argument)
+{
+  /* USER CODE BEGIN 5 */
+  /* Infinite loop */
+  for(;;)
+  {
+//			while (BSP_PB_GetState(BUTTON_KEY) == KEY_PRESSED)
+//			{
+				if (ubKeyNumber == 0x4)
+				{
+					ubKeyNumber = 0x00;
+				}
+				else
+				{
+//					LED_Display(++ubKeyNumber);
+					
+					/* Set the data to be transmitted */
+					TxData[0] = ubKeyNumber;
+					TxData[1] = 0xAD;
+					
+					/* Start the Transmission process */
+//					if (HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox) != HAL_OK)
+//					{
+//						/* Transmission request Error */
+//						Error_Handler();
+//					}
+					HAL_Delay(10);
+					
+//					while (BSP_PB_GetState(BUTTON_KEY) != KEY_NOT_PRESSED)
+//					{
+//					}
+//			}
+		}
   }
   /* USER CODE END 5 */
 }
@@ -599,9 +725,11 @@ void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
-  __disable_irq();
+//  __disable_irq();
   while (1)
   {
+		HAL_GPIO_TogglePin(ALARM_GPIO_Port, ALARM_Pin);
+		osDelay(25);
   }
   /* USER CODE END Error_Handler_Debug */
 }

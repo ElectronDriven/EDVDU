@@ -339,7 +339,7 @@
               <MiscControls>--c99</MiscControls>
               <Define>USE_HAL_DRIVER,STM32F103xB</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;../Drivers/STM32F1xx_HAL_Driver/Inc;../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32F1xx/Include;../Drivers/CMSIS/Include;../Middlewares/Third_Party/FreeRTOS/Source/include;../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM3</IncludePath>
+              <IncludePath>../Core/Inc;     ../Drivers/STM32F1xx_HAL_Driver/Inc;     ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy;     ../Drivers/CMSIS/Device/ST/STM32F1xx/Include;     ../Drivers/CMSIS/Include;     ../Middlewares/Third_Party/FreeRTOS/Source/include;     ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;     ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM3</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -531,16 +531,6 @@
               <FilePath>../Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_gpio_ex.c</FilePath>
             </File>
             <File>
-              <FileName>stm32f1xx_hal_adc.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>../Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_adc.c</FilePath>
-            </File>
-            <File>
-              <FileName>stm32f1xx_hal_adc_ex.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>../Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_adc_ex.c</FilePath>
-            </File>
-            <File>
               <FileName>stm32f1xx_hal.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal.c</FilePath>
@@ -589,16 +579,6 @@
               <FileName>stm32f1xx_hal_exti.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_exti.c</FilePath>
-            </File>
-            <File>
-              <FileName>stm32f1xx_hal_can.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>../Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_can.c</FilePath>
-            </File>
-            <File>
-              <FileName>stm32f1xx_hal_i2c.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>../Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_i2c.c</FilePath>
             </File>
             <File>
               <FileName>stm32f1xx_hal_rtc.c</FileName>
@@ -1273,6 +1253,101 @@
                   </Cads>
                 </FileArmAds>
               </FileOption>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>BMP</GroupName>
+          <Files>
+            <File>
+              <FileName>Logo.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Core\Src\BMP\Logo.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>FONT</GroupName>
+          <Files>
+            <File>
+              <FileName>Font.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>..\Core\Src\FONT\Font.cpp</FilePath>
+            </File>
+            <File>
+              <FileName>Font.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Core\Src\FONT\Font.h</FilePath>
+            </File>
+            <File>
+              <FileName>PE_Map.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Core\Src\FONT\PE_Map.h</FilePath>
+            </File>
+            <File>
+              <FileName>AF9x10.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Core\Src\FONT\font\AF9x10.h</FilePath>
+            </File>
+            <File>
+              <FileName>AF9x11.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Core\Src\FONT\font\AF9x11.h</FilePath>
+            </File>
+            <File>
+              <FileName>AF12x16.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Core\Src\FONT\font\AF12x16.h</FilePath>
+            </File>
+            <File>
+              <FileName>f5x7.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Core\Src\FONT\font\f5x7.h</FilePath>
+            </File>
+            <File>
+              <FileName>f9x14.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Core\Src\FONT\font\f9x14.h</FilePath>
+            </File>
+            <File>
+              <FileName>f10x20.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Core\Src\FONT\font\f10x20.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>GLCD</GroupName>
+          <Files>
+            <File>
+              <FileName>ks0108.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>..\Core\Src\GLCD\ks0108.cpp</FilePath>
+            </File>
+            <File>
+              <FileName>ks0108.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Core\Src\GLCD\ks0108.h</FilePath>
+            </File>
+            <File>
+              <FileName>ks0108config.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Core\Src\GLCD\ks0108config.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>GRAPHIC</GroupName>
+          <Files>
+            <File>
+              <FileName>Graphic.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>..\Core\Src\Graphic\Graphic.cpp</FilePath>
+            </File>
+            <File>
+              <FileName>Graphic.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Core\Src\Graphic\Graphic.h</FilePath>
             </File>
           </Files>
         </Group>

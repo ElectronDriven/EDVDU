@@ -31,7 +31,13 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#define _const										const
+#include <string.h>
+#include <stdio.h>
+#include "../Src/FONT/Font.h"
+#include "../Src/GLCD/ks0108.h"
+#include "../Src/GLCD/ks0108config.h"
+#include "../Src/Graphic/Graphic.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -59,20 +65,26 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define ALARM_Pin GPIO_PIN_13
 #define ALARM_GPIO_Port GPIOC
-#define TEMP_Pin GPIO_PIN_4
-#define TEMP_GPIO_Port GPIOA
-#define SD_SELECT_Pin GPIO_PIN_5
-#define SD_SELECT_GPIO_Port GPIOA
-#define FLASH_SELECT_Pin GPIO_PIN_6
-#define FLASH_SELECT_GPIO_Port GPIOA
-#define DOUT_Pin GPIO_PIN_7
-#define DOUT_GPIO_Port GPIOA
+#define EEPROM_SELECT_Pin GPIO_PIN_4
+#define EEPROM_SELECT_GPIO_Port GPIOA
 #define GLCD_D0_Pin GPIO_PIN_0
 #define GLCD_D0_GPIO_Port GPIOB
 #define GLCD_D1_Pin GPIO_PIN_1
 #define GLCD_D1_GPIO_Port GPIOB
 #define GLCD_D2_Pin GPIO_PIN_2
 #define GLCD_D2_GPIO_Port GPIOB
+#define FLASH_SELECT_Pin GPIO_PIN_10
+#define FLASH_SELECT_GPIO_Port GPIOB
+#define SDCARD_SELECT_Pin GPIO_PIN_11
+#define SDCARD_SELECT_GPIO_Port GPIOB
+#define GLCD_RS_Pin GPIO_PIN_12
+#define GLCD_RS_GPIO_Port GPIOB
+#define GLCD_E_Pin GPIO_PIN_13
+#define GLCD_E_GPIO_Port GPIOB
+#define GLCD_RST_Pin GPIO_PIN_14
+#define GLCD_RST_GPIO_Port GPIOB
+#define GLCD_RW_Pin GPIO_PIN_15
+#define GLCD_RW_GPIO_Port GPIOB
 #define LOAD_Pin GPIO_PIN_8
 #define LOAD_GPIO_Port GPIOA
 #define KEYS_Pin GPIO_PIN_15
@@ -92,6 +104,11 @@ void Error_Handler(void);
 #define GLCD_CS2_Pin GPIO_PIN_9
 #define GLCD_CS2_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
+#define HIGH											1
+#define LOW												0
+
+#define _delay_ms(x)							HAL_Delay(x)
+
 
 /* USER CODE END Private defines */
 
