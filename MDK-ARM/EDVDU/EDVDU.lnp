@@ -6,6 +6,7 @@
 "edvdu\stm32f1xx_hal_msp.o"
 "edvdu\stm32f1xx_hal_timebase_tim.o"
 "edvdu\stm32f1xx_hal_gpio_ex.o"
+"edvdu\stm32f1xx_hal_can.o"
 "edvdu\stm32f1xx_hal.o"
 "edvdu\stm32f1xx_hal_rcc.o"
 "edvdu\stm32f1xx_hal_rcc_ex.o"

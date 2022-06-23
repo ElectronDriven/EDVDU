@@ -51,6 +51,8 @@ unsigned int _delay_us(unsigned int Delay);
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+CAN_HandleTypeDef hcan;
+
 RTC_HandleTypeDef hrtc;
 
 SPI_HandleTypeDef hspi1;
@@ -60,13 +62,17 @@ UART_HandleTypeDef huart2;
 
 osThreadId defaultTaskHandle;
 /* USER CODE BEGIN PV */
+osThreadId communicationTaskHandle;
+osThreadId indicatorTaskHandle;
+osThreadId controlTaskHandle;
+
 unsigned char Data;
 char data[37];
 char Ctemp[20];
 
 uint8_t ubKeyNumber = 0x0;
-//CAN_TxHeaderTypeDef   TxHeader;
-//CAN_RxHeaderTypeDef   RxHeader;
+CAN_TxHeaderTypeDef   TxHeader;
+CAN_RxHeaderTypeDef   RxHeader;
 uint8_t               TxData[8];
 uint8_t               RxData[8];
 uint32_t              TxMailbox;
@@ -80,6 +86,7 @@ static void MX_USART2_UART_Init(void);
 static void MX_RTC_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_SPI1_Init(void);
+static void MX_CAN_Init(void);
 void StartDefaultTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
@@ -128,6 +135,7 @@ int main(void)
   MX_RTC_Init();
   MX_USART1_UART_Init();
   MX_SPI1_Init();
+  MX_CAN_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -156,13 +164,13 @@ int main(void)
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   osThreadDef(BLINK_T, BLINK, osPriorityNormal, 0, 128);
-  defaultTaskHandle = osThreadCreate(osThread(BLINK_T), NULL);
+  indicatorTaskHandle = osThreadCreate(osThread(BLINK_T), NULL);
 	
   osThreadDef(GLCD_T, GLCD, osPriorityNormal, 0, 128);
   defaultTaskHandle = osThreadCreate(osThread(GLCD_T), NULL);	
 
-  osThreadDef(CANBUS_T, CANBUS, osPriorityNormal, 0, 128);
-  defaultTaskHandle = osThreadCreate(osThread(CANBUS_T), NULL);	
+  osThreadDef(CANBUS_T, CANBUS, osPriorityHigh, 0, 128);
+  communicationTaskHandle = osThreadCreate(osThread(CANBUS_T), NULL);	
   /* USER CODE END RTOS_THREADS */
 
   /* Start scheduler */
@@ -224,6 +232,106 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief CAN Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_CAN_Init(void)
+{
+
+  /* USER CODE BEGIN CAN_Init 0 */
+
+  /* USER CODE END CAN_Init 0 */
+
+  /* USER CODE BEGIN CAN_Init 1 */
+
+  /* USER CODE END CAN_Init 1 */
+  hcan.Instance = CAN1;
+  hcan.Init.Prescaler = 18;
+  hcan.Init.Mode = CAN_MODE_NORMAL;
+  hcan.Init.SyncJumpWidth = CAN_SJW_1TQ;
+  hcan.Init.TimeSeg1 = CAN_BS1_2TQ;
+  hcan.Init.TimeSeg2 = CAN_BS2_1TQ;
+  hcan.Init.TimeTriggeredMode = DISABLE;
+  hcan.Init.AutoBusOff = DISABLE;
+  hcan.Init.AutoWakeUp = DISABLE;
+  hcan.Init.AutoRetransmission = DISABLE;
+  hcan.Init.ReceiveFifoLocked = DISABLE;
+  hcan.Init.TransmitFifoPriority = DISABLE;
+  if (HAL_CAN_Init(&hcan) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN CAN_Init 2 */
+	CAN_FilterTypeDef  sFilterConfig;
+
+  /* Configure the CAN Filter */
+  sFilterConfig.FilterBank = 0;
+  sFilterConfig.FilterMode = CAN_FILTERMODE_IDMASK;
+  sFilterConfig.FilterScale = CAN_FILTERSCALE_32BIT;
+  sFilterConfig.FilterIdHigh = 0x0000;
+  sFilterConfig.FilterIdLow = 0x0000;
+  sFilterConfig.FilterMaskIdHigh = 0x0000;
+  sFilterConfig.FilterMaskIdLow = 0x0000;
+  sFilterConfig.FilterFIFOAssignment = CAN_RX_FIFO0;
+  sFilterConfig.FilterActivation = ENABLE;
+  sFilterConfig.SlaveStartFilterBank = 14;
+
+  if (HAL_CAN_ConfigFilter(&hcan, &sFilterConfig) != HAL_OK)
+  {
+    /* Filter configuration Error */
+    Error_Handler();
+  }
+
+  /* Start the CAN peripheral */
+  if (HAL_CAN_Start(&hcan) != HAL_OK)
+  {
+    /* Start Error */
+    Error_Handler();
+  }
+
+  /* Activate CAN RX notification */
+  if (HAL_CAN_ActivateNotification(&hcan, CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK)
+  {
+    /* Notification Error */
+    Error_Handler();
+  }
+  
+  /* Configure Transmission process */
+  TxHeader.StdId = 0x103;
+//  TxHeader.ExtId = 0x01;
+  TxHeader.RTR = CAN_RTR_DATA;
+  TxHeader.IDE = CAN_ID_STD;
+  TxHeader.DLC = 2;
+  TxHeader.TransmitGlobalTime = DISABLE;
+}
+
+/**
+  * @brief  Rx Fifo 0 message pending callback in non blocking mode
+  * @param  CanHandle: pointer to a CAN_HandleTypeDef structure that contains
+  *         the configuration information for the specified CAN.
+  * @retval None
+  */
+void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *CanHandle)
+{
+  /* Get RX message */
+  if (HAL_CAN_GetRxMessage(CanHandle, CAN_RX_FIFO0, &RxHeader, RxData) != HAL_OK)
+  {
+    /* Reception Error */
+    Error_Handler();
+  }
+
+  /* Display LEDx */
+  if ((RxHeader.StdId == 0x103) && (RxHeader.IDE == CAN_ID_STD) && (RxHeader.DLC == 2))
+  {
+//    LED_Display(RxData[0]);
+    ubKeyNumber = RxData[0];
+  }
+  /* USER CODE END CAN_Init 2 */
+
 }
 
 /**
@@ -437,18 +545,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(LOAD_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PA11 */
-  GPIO_InitStruct.Pin = GPIO_PIN_11;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : PA12 */
-  GPIO_InitStruct.Pin = GPIO_PIN_12;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
   /*Configure GPIO pin : KEYS_Pin */
   GPIO_InitStruct.Pin = KEYS_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
@@ -514,31 +610,6 @@ unsigned int _delay_us(unsigned int Delay)
 }
 
 /**
-  * @brief  Rx Fifo 0 message pending callback in non blocking mode
-  * @param  CanHandle: pointer to a CAN_HandleTypeDef structure that contains
-  *         the configuration information for the specified CAN.
-  * @retval None
-  */
-
-//void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *CanHandle)
-//{
-//  /* Get RX message */
-//  if (HAL_CAN_GetRxMessage(CanHandle, CAN_RX_FIFO0, &RxHeader, RxData) != HAL_OK)
-//  {
-//    /* Reception Error */
-//    Error_Handler();
-//  }
-
-//  /* Display LEDx */
-//  if ((RxHeader.StdId == 0x321) && (RxHeader.IDE == CAN_ID_STD) && (RxHeader.DLC == 2))
-//  {
-////    LED_Display(RxData[0]);
-//    ubKeyNumber = RxData[0];
-//  }
-//}
-
-
-/**
   * @brief  Turns ON/OFF the dedicated LED.
   * @param  LedStatus: LED number from 0 to 3
   * @retval None
@@ -587,75 +658,67 @@ unsigned int _delay_us(unsigned int Delay)
 
 void CANBUS(void const * argument)
 {
-  /* USER CODE BEGIN 5 */
   /* Infinite loop */
   for(;;)
   {
 //			while (BSP_PB_GetState(BUTTON_KEY) == KEY_PRESSED)
 //			{
-				if (ubKeyNumber == 0x4)
-				{
-					ubKeyNumber = 0x00;
-				}
-				else
-				{
+//				if (ubKeyNumber == 0x4)
+//				{
+//					ubKeyNumber = 0x00;
+//				}
+//				else
+//				{
 //					LED_Display(++ubKeyNumber);
 					
 					/* Set the data to be transmitted */
-					TxData[0] = ubKeyNumber;
-					TxData[1] = 0xAD;
+					TxData[0] = 0xAA;
+					TxData[1] = 0x55;
 					
 					/* Start the Transmission process */
-//					if (HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox) != HAL_OK)
-//					{
-//						/* Transmission request Error */
-//						Error_Handler();
-//					}
-					HAL_Delay(10);
+					if (HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox) != HAL_OK)
+					{
+						/* Transmission request Error */
+						Error_Handler();
+					}
+					osDelay(10);
 					
 //					while (BSP_PB_GetState(BUTTON_KEY) != KEY_NOT_PRESSED)
 //					{
 //					}
 //			}
-		}
+//		}
   }
-  /* USER CODE END 5 */
 }
 
 void BLINK(void const * argument)
 {
-  /* USER CODE BEGIN 5 */
   /* Infinite loop */
   for(;;)
   {
 		HAL_GPIO_TogglePin(ALARM_GPIO_Port, ALARM_Pin);
-    osDelay(50);
+    osDelay(1000);
   }
-  /* USER CODE END 5 */
 }
 
 void GLCD(void const * argument)
-{
-  /* USER CODE BEGIN 5 */
-	
+{	
 	KS108_Init(NON_INVERTED);
 	KS108_CLSx();
+
+	KS108_DrawBitmap(Logo, 0, 0, TRANS);
+	osDelay(2000);
+	KS108_CLSx();
+	
+	SetLetter(E_LETTER);
+	LcdFont(AF12x16);
+	TextBox (0, 20,  127,  40, "ELECTRON DRIVEN",  ALINE_CENTER | BORDER_RECT |BORDER_FILL);
 	
   /* Infinite loop */
   for(;;)
   {
-		KS108_DrawBitmap(Logo, 0, 0, TRANS);
-		_delay_ms(1500);
-		KS108_CLSx();
-		
-		SetLetter(E_LETTER);
-		LcdFont(AF12x16);
-		TextBox (0, 20,  127,  40, "ELECTRON DRIVEN",  ALINE_CENTER | BORDER_RECT |BORDER_FILL);
-		_delay_ms(1500);
-		KS108_CLSx();
 
   }
-  /* USER CODE END 5 */
 }
 
 /* USER CODE END Header_StartDefaultTask */
@@ -665,34 +728,8 @@ void StartDefaultTask(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-//			while (BSP_PB_GetState(BUTTON_KEY) == KEY_PRESSED)
-//			{
-				if (ubKeyNumber == 0x4)
-				{
-					ubKeyNumber = 0x00;
-				}
-				else
-				{
-//					LED_Display(++ubKeyNumber);
-					
-					/* Set the data to be transmitted */
-					TxData[0] = ubKeyNumber;
-					TxData[1] = 0xAD;
-					
-					/* Start the Transmission process */
-//					if (HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox) != HAL_OK)
-//					{
-//						/* Transmission request Error */
-//						Error_Handler();
-//					}
-					HAL_Delay(10);
-					
-//					while (BSP_PB_GetState(BUTTON_KEY) != KEY_NOT_PRESSED)
-//					{
-//					}
-//			}
-		}
-  }
+		
+	}
   /* USER CODE END 5 */
 }
 
