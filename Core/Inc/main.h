@@ -107,7 +107,7 @@ void Error_Handler(void);
 #define HIGH											1
 #define LOW												0
 
-#define _delay_ms(x)							HAL_Delay(x)
+#define _delay_ms(x)							osDelay(x)
 
 
 /* USER CODE END Private defines */
