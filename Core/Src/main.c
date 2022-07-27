@@ -40,9 +40,13 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+<<<<<<< Updated upstream
 ADC_HandleTypeDef hadc1;
 
 CAN_HandleTypeDef hcan;
+=======
+ CAN_HandleTypeDef hcan;
+>>>>>>> Stashed changes
 
 I2C_HandleTypeDef hi2c2;
 
@@ -183,6 +187,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+
   /** Initializes the CPU, AHB and APB buses clocks
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
@@ -339,6 +344,7 @@ static void MX_RTC_Init(void)
   /* USER CODE BEGIN RTC_Init 1 */
 
   /* USER CODE END RTC_Init 1 */
+
   /** Initialize RTC Only
   */
   hrtc.Instance = RTC;
@@ -545,6 +551,10 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(KEYS_GPIO_Port, &GPIO_InitStruct);
 
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+
 }
 
 /* USER CODE BEGIN 4 */
@@ -557,6 +567,75 @@ static void MX_GPIO_Init(void)
   * @param  argument: Not used
   * @retval None
   */
+<<<<<<< Updated upstream
+=======
+
+void CANBUS(void const * argument)
+{
+  /* Infinite loop */
+  for(;;)
+  {
+//			while (BSP_PB_GetState(BUTTON_KEY) == KEY_PRESSED)
+//			{
+//				if (ubKeyNumber == 0x4)
+//				{
+//					ubKeyNumber = 0x00;
+//				}
+//				else
+//				{
+//					LED_Display(++ubKeyNumber);
+					
+					/* Set the data to be transmitted */
+					TxData[0] = 0xAA;
+					TxData[1] = 0x55;
+					
+					/* Start the Transmission process */
+					if (HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox) != HAL_OK)
+					{
+						/* Transmission request Error */
+						Error_Handler();
+					}
+					osDelay(10);
+					
+//					while (BSP_PB_GetState(BUTTON_KEY) != KEY_NOT_PRESSED)
+//					{
+//					}
+//			}
+//		}
+  }
+}
+
+void BLINK(void const * argument)
+{
+  /* Infinite loop */
+  for(;;)
+  {
+		HAL_GPIO_TogglePin(ALARM_GPIO_Port, ALARM_Pin);
+    osDelay(1000);
+  }
+}
+
+void GLCD(void const * argument)
+{	
+	KS108_Init(NON_INVERTED);
+	KS108_CLSx();
+
+//	KS108_DrawBitmap(Logo, 0, 0, TRANS);
+	osDelay(2000);
+	KS108_CLSx();
+	
+	SetLetter(E_LETTER);
+	LcdFont(AF12x16);
+	TextBox (0, 20,  127,  40, "M G P A",  ALINE_CENTER | BORDER_RECT |BORDER_FILL);
+	
+  /* Infinite loop */
+  for(;;)
+  {
+
+  }
+}
+
+>>>>>>> Stashed changes
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void const * argument)
 {
@@ -622,4 +701,3 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
-

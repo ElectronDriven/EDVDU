@@ -77,6 +77,7 @@ void Error_Handler(void);
 #define LOAD_GPIO_Port GPIOA
 #define KEYS_Pin GPIO_PIN_15
 #define KEYS_GPIO_Port GPIOA
+#define KEYS_EXTI_IRQn EXTI15_10_IRQn
 #define GLCD_D3_Pin GPIO_PIN_3
 #define GLCD_D3_GPIO_Port GPIOB
 #define GLCD_D4_Pin GPIO_PIN_4
