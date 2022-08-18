@@ -85,8 +85,8 @@ void Error_Handler(void);
 #define GLCD_RST_GPIO_Port GPIOB
 #define GLCD_RW_Pin GPIO_PIN_15
 #define GLCD_RW_GPIO_Port GPIOB
-#define LOAD_Pin GPIO_PIN_8
-#define LOAD_GPIO_Port GPIOA
+#define TX_EN_Pin GPIO_PIN_8
+#define TX_EN_GPIO_Port GPIOA
 #define KEYS_Pin GPIO_PIN_15
 #define KEYS_GPIO_Port GPIOA
 #define GLCD_D3_Pin GPIO_PIN_3
