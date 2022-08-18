@@ -1,7 +1,11 @@
 --cpu Cortex-M3
 "edvdu\startup_stm32f103xb.o"
 "edvdu\main.o"
+"edvdu\gpio.o"
 "edvdu\freertos.o"
+"edvdu\can.o"
+"edvdu\spi.o"
+"edvdu\usart.o"
 "edvdu\stm32f1xx_it.o"
 "edvdu\stm32f1xx_hal_msp.o"
 "edvdu\stm32f1xx_hal_timebase_tim.o"
@@ -17,8 +21,6 @@
 "edvdu\stm32f1xx_hal_flash.o"
 "edvdu\stm32f1xx_hal_flash_ex.o"
 "edvdu\stm32f1xx_hal_exti.o"
-"edvdu\stm32f1xx_hal_rtc.o"
-"edvdu\stm32f1xx_hal_rtc_ex.o"
 "edvdu\stm32f1xx_hal_spi.o"
 "edvdu\stm32f1xx_hal_tim.o"
 "edvdu\stm32f1xx_hal_tim_ex.o"
@@ -34,9 +36,6 @@
 "edvdu\cmsis_os.o"
 "edvdu\heap_4.o"
 "edvdu\port.o"
-"edvdu\font.o"
-"edvdu\ks0108.o"
-"edvdu\graphic.o"
 --strict --scatter "EDVDU\EDVDU.sct"
 --summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers

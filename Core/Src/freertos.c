@@ -124,7 +124,8 @@ void StartDefaultTask(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+		HAL_GPIO_TogglePin(ALARM_GPIO_Port, ALARM_Pin);
+    osDelay(100);
   }
   /* USER CODE END StartDefaultTask */
 }

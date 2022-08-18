@@ -31,13 +31,7 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#define _const										const
-#include <string.h>
-#include <stdio.h>
-#include "../Src/FONT/Font.h"
-#include "../Src/GLCD/ks0108.h"
-#include "../Src/GLCD/ks0108config.h"
-#include "../Src/Graphic/Graphic.h"
+
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -104,11 +98,6 @@ void Error_Handler(void);
 #define GLCD_CS2_Pin GPIO_PIN_9
 #define GLCD_CS2_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
-#define HIGH											1
-#define LOW												0
-
-#define _delay_ms(x)							osDelay(x)
-
 
 /* USER CODE END Private defines */
 
