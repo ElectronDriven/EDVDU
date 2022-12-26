@@ -49,6 +49,7 @@ unsigned int _delay_us(unsigned int Delay);
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
+DMA_HandleTypeDef hdma_adc1;
 
 CAN_HandleTypeDef hcan;
 
@@ -70,6 +71,7 @@ char Ctemp[20];
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_ADC1_Init(void);
@@ -84,7 +86,7 @@ static void MX_TIM2_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-uint16_t keysValue = 0;
+uint32_t keysValue = 0;
 uint8_t keyNumber = 0;
 char str[128];
 /* USER CODE END 0 */
@@ -117,6 +119,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_ADC1_Init();
@@ -175,6 +178,7 @@ int main(void)
   while (1)
   {
 		
+/*		
 	 // Start ADC Conversion
 		HAL_ADC_Start(&hadc1);
 	 // Poll ADC1 Perihperal & TimeOut = 1mSec
@@ -182,7 +186,12 @@ int main(void)
 	 // Read The ADC Conversion Result & Map It To PWM DutyCycle
 		keysValue = HAL_ADC_GetValue(&hadc1);		
 //		HAL_GPIO_TogglePin(ALARM_GPIO_Port, ALARM_Pin); HAL_Delay(1000);
+*/
 
+		KS108_CLSx();
+		
+    HAL_ADC_Start_DMA(&hadc1, &keysValue, 1);
+		
 		sprintf(str, "Value of Keys = %d", keysValue);
 		TextBox (0, 0,  48,  9, str,  0);
 
@@ -198,8 +207,9 @@ int main(void)
 		else {TextBox (0, 9,  48,  18, "NO KEYS",  0); keyNumber = 0;}
 		
 		HAL_Delay(100);
-		KS108_FillRect(0, 54, 42, 9, WHITE);
-		KS108_FillRect(80, 45, 47, 9, WHITE);
+
+//		KS108_FillRect(0, 54, 42, 9, WHITE);
+//		KS108_FillRect(80, 45, 47, 9, WHITE);
 
 		
 //		
@@ -599,6 +609,22 @@ static void MX_USART3_UART_Init(void)
 }
 
 /**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Channel1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -709,6 +735,14 @@ unsigned int _delay_us(unsigned int Delay)
 		}
 		return Sum;
 }
+
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
+{
+		sprintf(str, "Value of DMA = %d", keysValue);
+		TextBox (0, 18,  48,  27, str,  0);
+}
+
+
 /* USER CODE END 4 */
 
 /**
