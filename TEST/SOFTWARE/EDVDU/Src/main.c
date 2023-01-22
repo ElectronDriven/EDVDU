@@ -26,6 +26,7 @@
 #include "FONT/font/AF12x16.h"
 #include "FONT/font/f10x20.h"
 #include "BMP/Logo.h"
+#include "u8g2/u8g2.h"
 
 /* USER CODE END Includes */
 
@@ -45,6 +46,10 @@ void Output_DB_GLCD(void);
 void Write_DB_GLCD(unsigned char x);
 unsigned char Read_DB_GLCD(void);
 unsigned int _delay_us(unsigned int Delay);
+
+uint8_t ReadKey(void);
+uint8_t SelectedPlace(uint8_t key);
+
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -66,6 +71,26 @@ UART_HandleTypeDef huart3;
 unsigned char Data;
 char data[37];
 char Ctemp[20];
+
+
+
+typedef struct
+{
+  uint8_t menuPosition;       
+  uint8_t isSelected;
+  uint8_t page;
+  char name;
+} menuItems;
+
+typedef struct
+{
+  uint8_t x1;
+  uint8_t y1;
+  uint8_t x2;
+  uint8_t y2;
+} menuPosition;
+
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -82,13 +107,84 @@ static void MX_USART3_UART_Init(void);
 static void MX_TIM2_Init(void);
 /* USER CODE BEGIN PFP */
 
+
+//uint8_t u8g2_gpio_and_delay_stm32(U8X8_UNUSED u8x8_t *u8x8, U8X8_UNUSED uint8_t msg, U8X8_UNUSED uint8_t arg_int, U8X8_UNUSED void *arg_ptr)
+//{
+//	switch(msg){
+//		//Initialize SPI peripheral
+//		case U8X8_MSG_GPIO_AND_DELAY_INIT:
+//			/* HAL initialization contains all what we need so we can skip this part. */
+
+//		break;
+
+//		//Function which implements a delay, arg_int contains the amount of ms
+//		case U8X8_MSG_DELAY_MILLI:
+//		HAL_Delay(arg_int);
+
+//		break;
+//		//Function which delays 10us
+//		case U8X8_MSG_DELAY_10MICRO:
+//		for (uint16_t n = 0; n < 320; n++)
+//		{
+//			__NOP();
+//		}
+
+//		break;
+//		//Function which delays 100ns
+//		case U8X8_MSG_DELAY_100NANO:
+//		__NOP();
+
+//		break;
+//		//Function to define the logic level of the clockline
+//		case U8X8_MSG_GPIO_SPI_CLOCK:
+//			if (arg_int) HAL_GPIO_WritePin(SCK_GPIO_Port, SCK_Pin, RESET);
+//			else HAL_GPIO_WritePin(SCK_GPIO_Port, SCK_Pin, SET);
+
+//		break;
+//		//Function to define the logic level of the data line to the display
+//		case U8X8_MSG_GPIO_SPI_DATA:
+//			if (arg_int) HAL_GPIO_WritePin(MOSI_GPIO_Port, MOSI_Pin, SET);
+//			else HAL_GPIO_WritePin(MOSI_GPIO_Port, MOSI_Pin, RESET);
+
+//		break;
+//		// Function to define the logic level of the CS line
+//		case U8X8_MSG_GPIO_CS:
+//			if (arg_int) HAL_GPIO_WritePin(LCD_CS_GPIO_Port, LCD_CS_Pin, RESET);
+//			else HAL_GPIO_WritePin(LCD_CS_GPIO_Port, LCD_CS_Pin, SET);
+
+//		break;
+//		//Function to define the logic level of the Data/ Command line
+//		case U8X8_MSG_GPIO_DC:
+////			if (arg_int) HAL_GPIO_WritePin(CD_LCD_PORT, CD_LCD_PIN, SET);
+////			else HAL_GPIO_WritePin(CD_LCD_PORT, CD_LCD_PIN, RESET);
+
+//		break;
+//		//Function to define the logic level of the RESET line
+//		case U8X8_MSG_GPIO_RESET:
+//			if (arg_int) HAL_GPIO_WritePin(LCD_RESET_GPIO_Port, LCD_RESET_Pin, SET);
+//			else HAL_GPIO_WritePin(LCD_RESET_GPIO_Port, LCD_RESET_Pin, RESET);
+
+//		break;
+//		default:
+//			return 0; //A message was received which is not implemented, return 0 to indicate an error
+//	}
+
+//	return 1; // command processed successfully.
+//}
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 uint32_t keysValue = 0;
-uint8_t keyNumber = 0;
+uint8_t pressedKey = 0;
+uint8_t pushedKey = 0;
+
 char str[128];
+
+uint8_t x=0, y=0, place=0;
+uint8_t menuPlace[7]={0, 9, 18, 27, 36, 45, 54};
+
 /* USER CODE END 0 */
 
 /**
@@ -129,13 +225,14 @@ int main(void)
   MX_USART3_UART_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
+//	u8g2_t u8g2;
+//	u8g2_Setup_ks0108_128x64_1(&u8g2, U8G2_R0, u8x8_byte_ks0108, u8g2_gpio_and_delay_stm32);
+	
 	HAL_GPIO_TogglePin(ALARM_GPIO_Port, ALARM_Pin); HAL_Delay(100);
 	HAL_GPIO_TogglePin(ALARM_GPIO_Port, ALARM_Pin); HAL_Delay(100);
 
 	// Calibrate The ADC On Power-Up For Better Accuracy
   HAL_ADCEx_Calibration_Start(&hadc1);
-
-
 
 	KS108_Init(NON_INVERTED); 	_delay_ms(100);
 //	KS108_CLSx();
@@ -159,7 +256,6 @@ int main(void)
 	SetLetter(E_LETTER);
 	LcdFont(f5x7);
 
-
 //	TextBox (0, 0,  48,  9, "EDVDU V1",  0);
 //	TextBox (0, 9,  48,  18, "EDVDU V2",  0);
 //	TextBox (0, 18,  48,  27, "EDVDU V3",  0);
@@ -170,6 +266,8 @@ int main(void)
 	
 	HAL_GPIO_TogglePin(ALARM_GPIO_Port, ALARM_Pin); HAL_Delay(100);
 	HAL_GPIO_TogglePin(ALARM_GPIO_Port, ALARM_Pin); HAL_Delay(100);
+		
+		
 		
   /* USER CODE END 2 */
 
@@ -188,47 +286,77 @@ int main(void)
 //		HAL_GPIO_TogglePin(ALARM_GPIO_Port, ALARM_Pin); HAL_Delay(1000);
 */
 
-		KS108_CLSx();
+//		KS108_CLSx();
 		
     HAL_ADC_Start_DMA(&hadc1, &keysValue, 1);
 		
-		sprintf(str, "Value of Keys = %d", keysValue);
-		TextBox (0, 0,  48,  9, str,  0);
+//		KS108_FillRect(0, 45, 42, 9, WHITE);
+		KS108_FillRect(80, 45,  47,  9, WHITE);
+		
+		TextBox (0, 0,  54,  9, "EDVDU V1 Test Mode", 0);
 
-		if(keysValue==0){TextBox (0, 9,  48,  18, "GO",  0); keyNumber = 1;}
-		else
-		if(500<keysValue&&keysValue<600){TextBox (0, 9,  48,  18, "BACK",  0); keyNumber = 2;}
-		else
-		if(1300<keysValue&&keysValue<1400){TextBox (0, 9,  48,  18, "UP",  0); keyNumber = 3;}
-		else
-		if(2000<keysValue&&keysValue<2100){TextBox (0, 9,  48,  18, "SELECT",  0); keyNumber = 4;}
-		else
-		if(2900<keysValue&&keysValue<3000){TextBox (0, 9,  48,  18, "DOWN",  0); keyNumber = 5;}
-		else {TextBox (0, 9,  48,  18, "NO KEYS",  0); keyNumber = 0;}
+//		sprintf(str, "Value of Keys = %d", keysValue);
+//		TextBox (0, 9,  48,  18, str,  0);
+
+		switch (pressedKey) {
+				case (1):
+						TextBox (0, 9,  48,  18, "GO",  0);
+						break;
+				case (2):
+						TextBox (0, 9,  48,  18, "BACK",  0);
+						break;
+				case (3):
+						TextBox (0, 9,  48,  18, "UP",  0);
+						break;
+				case (4):
+						TextBox (0, 9,  48,  18, "SELECT",  0);
+						break;
+				case (5):
+						TextBox (0, 9,  48,  18, "DOWN",  0);
+						break;
+				case (0):
+						TextBox (0, 9,  48,  18, "NO KEYS",  0);
+						break;
+				default:
+//						KS108_InvertRect(0, 0, 127, 63);
+						break;
+		}
+
+		
+		pushedKey = ReadKey();
+		place = SelectedPlace(pushedKey);
+
+		switch (place) {
+				case (1):
+						KS108_InvertRect(0, 54, 127, 9);
+						break;
+				case (2):
+						KS108_InvertRect(0, 45, 127, 9);
+						break;
+				case (3):
+						KS108_InvertRect(0, 36, 127, 9);
+						break;
+				case (4):
+						KS108_InvertRect(0, 27, 127, 9);
+						break;
+				case (5):
+						KS108_InvertRect(0, 18, 127, 9);
+						break;
+				case (6):
+						KS108_InvertRect(0, 9, 127, 9);
+						break;
+				case (7):
+						KS108_InvertRect(0, 0, 127, 9);
+						break;
+				default:
+						KS108_CLSx();
+				break;
+		}		
+		
 		
 		HAL_Delay(100);
 
-//		KS108_FillRect(0, 54, 42, 9, WHITE);
-//		KS108_FillRect(80, 45, 47, 9, WHITE);
 
-		
-//		
-//		switch (keysValue) {
-//				case (0):
-//						TextBox (0, 9,  48,  18, "GO",  0);
-//						break;
-//				case (500):
-//						printf("Value is 8");
-//						break;
-//				case 9:
-//						printf("Value is 9");
-//						break;
-//				default:
-//						printf("Out of range");
-//						break;
-//		}
-//		
-		
 		
     /* USER CODE END WHILE */
 
@@ -738,11 +866,28 @@ unsigned int _delay_us(unsigned int Delay)
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
-		sprintf(str, "Value of DMA = %d", keysValue);
-		TextBox (0, 18,  48,  27, str,  0);
+	if(keysValue==0) {pressedKey=1;}
+	else if(500<keysValue&&keysValue<600) {pressedKey=2;}
+	else if(1300<keysValue&&keysValue<1400) {pressedKey=3;}
+	else if(2000<keysValue&&keysValue<2100) {pressedKey=4;}
+	else if(2900<keysValue&&keysValue<3000) {pressedKey=5;}
+	else {pressedKey=0;}
 }
 
+uint8_t ReadKey(void)
+{
+	return pressedKey;
+}
 
+uint8_t SelectedPlace(uint8_t key)
+{
+	uint8_t place;
+	
+	if (key==5){place++; if (place>7){place=7;}	}
+	else if (key==3){place--; if (place<1){place=1;}	}
+	
+	return place;
+}
 /* USER CODE END 4 */
 
 /**
