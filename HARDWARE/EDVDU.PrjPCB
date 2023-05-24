@@ -126,6 +126,10 @@ DocumentUniqueId=LKHRELHR
 DocumentPath=Project Outputs for EDVDU\Design Rule Check - EDVDU_v1.html
 DItemRevisionGUID=
 
+[SearchPath1]
+Path=..\..\chilaPCB\Altium-Library\*.*
+IncludeSubFolders=1
+
 [Configuration1]
 Name=Sources
 ParameterCount=0
@@ -245,7 +249,7 @@ OutputDefault20=0
 [OutputGroup2]
 Name=Simulator Outputs
 Description=
-TargetPrinter=Canon LBP6000/LBP6018
+TargetPrinter=AnyDesk Printer
 PrinterOptions=Record=PrinterOptions|Copies=1|Duplex=1|TrueTypeOptions=3|Collate=1|PrintJobKind=1|PrintWhat=1
 
 [OutputGroup3]
