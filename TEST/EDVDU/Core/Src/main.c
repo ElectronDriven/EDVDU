@@ -94,21 +94,40 @@ void StartDefaultTask(void const * argument);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void vTask_menu(void *pvParameters){
-	volatile uint32_t u1;
-	for (	;	;	){
-		printf("Menu");
-		HAL_Delay(10); // problem! not recomended
+#define STACK_SIZE 256
+StaticTask_t xTaskBuffer; // control and manage TCB
+StackType_t xStack[STACK_SIZE];
+
+void vTask_home(void *pvParameters){
+  volatile uint32_t Var;
+  for( ; ; ){
 		SetLetter(E_LETTER);
 		LcdFont(AF9x10);
 		TextBox (0, 0,  127,  12, "Read Speed",  ALINE_LEFT /*| BORDER_RECT |BORDER_FILL*/);
 		TextBox (0, 12,  127,  24, "Read Timing",  ALINE_LEFT /*| BORDER_RECT |BORDER_FILL*/);
-		TextBox (0, 24,  127,  36, "Read Timing",  ALINE_LEFT /*| BORDER_RECT |BORDER_FILL*/);
-		TextBox (0, 36,  127,  48, "Read Timing",  ALINE_LEFT /*| BORDER_RECT |BORDER_FILL*/);
-		TextBox (0, 48,  127,  60, "Read Timing",  ALINE_LEFT /*| BORDER_RECT |BORDER_FILL*/);		
-		
-	}
+		TextBox (0, 24,  127,  36, "Read ADC",  ALINE_LEFT /*| BORDER_RECT |BORDER_FILL*/);
+		TextBox (0, 36,  127,  48, "Read CAN",  ALINE_LEFT /*| BORDER_RECT |BORDER_FILL*/);
+		TextBox (0, 48,  127,  60, "Read RS485",  ALINE_LEFT /*| BORDER_RECT |BORDER_FILL*/);
+  }
+
 }
+
+
+// void vTask_menu(void *pvParameters){
+// 	volatile uint32_t u1;
+// 	for (	;	;	){
+// 		printf("Menu");
+// 		HAL_Delay(10); // problem! not recomended
+// 		SetLetter(E_LETTER);
+// 		LcdFont(AF9x10);
+// 		TextBox (0, 0,  127,  12, "Read Speed",  ALINE_LEFT /*| BORDER_RECT |BORDER_FILL*/);
+// 		TextBox (0, 12,  127,  24, "Read Timing",  ALINE_LEFT /*| BORDER_RECT |BORDER_FILL*/);
+// 		TextBox (0, 24,  127,  36, "Read Timing",  ALINE_LEFT /*| BORDER_RECT |BORDER_FILL*/);
+// 		TextBox (0, 36,  127,  48, "Read Timing",  ALINE_LEFT /*| BORDER_RECT |BORDER_FILL*/);
+// 		TextBox (0, 48,  127,  60, "Read Timing",  ALINE_LEFT /*| BORDER_RECT |BORDER_FILL*/);		
+		
+// 	}
+// }
 
 void vTask_read_keys(void *pvParameters){
 	volatile uint32_t u1;
@@ -220,9 +239,14 @@ int main(void)
   /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-	xTaskCreate ( vTask_menu, "Menu", 128, NULL, 1 /*priority*/, NULL); // 128*4 == 512b
-	xTaskCreate ( vTask_read_keys, "Read Keyts", 128, NULL, 1 /*priority*/, NULL); // 128*4 == 512b
-	xTaskCreate ( vTask_item_selector, "Item Selector", 128, NULL, 1 /*priority*/, NULL); // 128*4 == 512b
+// 	xTaskCreate ( vTask_read_keys, "Read Keyts", 128, NULL, 1 /*priority*/, NULL); // 128*4 == 512b
+// 	xTaskCreate ( vTask_item_selector, "Item Selector", 128, NULL, 1 /*priority*/, NULL); // 128*4 == 512b
+
+// if (xTaskCreate ( vTask_menu, "Menu", 128, NULL, 1 /*priority*/, NULL) == pdFAIL){
+
+// } 
+	TaskHandle_t xHandle = NULL;
+	xHandle = xTaskCreateStatic(vTask_home, "Home", STACK_SIZE, NULL, 1, xStack, &xTaskBuffer);
 
 	vTaskStartScheduler();
 	

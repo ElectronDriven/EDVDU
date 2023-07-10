@@ -2,3 +2,9 @@
 Version=1.0
 [Project1]
 ProjectPath=EDVDU.PrjPCB
+[Project2]
+ProjectPath=..\..\HODHOD_UBAND\PA.PrjPCB
+[Project3]
+ProjectPath=..\..\HODHOD_UBAND\SATELLITE.PrjPCB
+[Project4]
+ProjectPath=..\..\HODHOD_UBAND\INTERFACE\INTERFACE.PrjPcb
