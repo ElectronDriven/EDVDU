@@ -2,3 +2,5 @@
 Version=1.0
 [Project1]
 ProjectPath=EDVDU.PrjPCB
+[Project2]
+ProjectPath=..\..\..\EDVMS\HARDWARE\EDVMS\EDVMS.PrjPcb
